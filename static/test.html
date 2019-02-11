@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+<script>
+  const getData = (name, value) => {
+    return {
+      name: name,
+      value: value
+    }
+  };
+  // 马上1.2w 还呗1w 省呗官方2.3w, 中原3w, 北京银行2.5w, 平安普惠3w，平安3w, 招商3w
+  const total = [];
+
+  total.push(getData('马上', 1.2));
+  total.push(getData('还呗', 1));
+  total.push(getData('省呗官方', 2.3));
+  total.push(getData('中原消费', 3));
+  total.push(getData('北京银行', 2.5));
+  total.push(getData('平安普惠', 3));
+  total.push(getData('平安', 3));
+  total.push(getData('招商', 3));
+
+  // let finalMoney = 0;
+  //
+  // total.forEach(m => {
+  //   finalMoney += m.value
+  // });
+  console.log(parseInt(Math.random()*100000000000))
+</script>
+</html>
