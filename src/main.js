@@ -8,13 +8,34 @@ import router from './router'
 import ElementUI from 'element-ui';
 import "element-ui/lib/theme-chalk/index.css";
 import store from './store'
-
+import {getToken} from "./Utils/auth";
 
 Vue.config.productionTip = false;
 Vue.use(ElementUI, {
   size: "medium"
 });
+const eventBus = {
+  install(Vue, options) {
+    Vue.prototype.$bus = new Vue();
+  }
+};
 
+Vue.use(eventBus);
+router.beforeEach((to, from, next) => {
+  if(to.path === '/login'){
+    if(getToken()){
+      next('/main')
+    }else{
+      next()
+    }
+  }else{
+    if(!getToken()){
+      next('/main')
+    }else{
+      next()
+    }
+  }
+});
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
@@ -22,4 +43,4 @@ new Vue({
   router,
   components: { App },
   template: '<App/>'
-})
+});

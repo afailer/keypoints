@@ -1,36 +1,251 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+  <title></title>
 </head>
+<style>
+</style>
 <body>
-
+<button id="plus">+</button> <button id="minus">-</button>
+<button id="write">write</button>
+<canvas id="canvas" width="1500px" height="800px" style="background-color: transparent;" />
 </body>
-<script>
-  const getData = (name, value) => {
-    return {
-      name: name,
-      value: value
-    }
-  };
-  // 马上1.2w 还呗1w 省呗官方2.3w, 中原3w, 北京银行2.5w, 平安普惠3w，平安3w, 招商3w
-  const total = [];
+<script type="text/javascript">
+  let scalex = 1;
+  let scaley = 1;
 
-  total.push(getData('马上', 1.2));
-  total.push(getData('还呗', 1));
-  total.push(getData('省呗官方', 2.3));
-  total.push(getData('中原消费', 3));
-  total.push(getData('北京银行', 2.5));
-  total.push(getData('平安普惠', 3));
-  total.push(getData('平安', 3));
-  total.push(getData('招商', 3));
+  document.getElementById('plus').onclick = function () {
+    scalex = scalex*1.2
+    scaley = scaley*1.2
+    pen.scale(1.2,1.2);
+  };
+  document.getElementById('minus').onclick = function () {
+    scalex = scalex*0.8
+    scaley = scaley*0.8
+    pen.scale(0.8,0.8);
+  };
+  document.getElementById('write').onclick = function () {
+    console.log(elements)
+  };
+  const canvas = document.getElementById('canvas');
+  const pen = canvas.getContext('2d');
+  pen.scale(scalex,scaley)
+  const elements = [];
+  const img = new Image();
+  img.src = 'https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1547098116751&di=6c9e4332c4f5212caf18a058e7d00a18&imgtype=0&src=http%3A%2F%2F05.imgmini.eastday.com%2Fmobile%2F20180124%2F7c4087d7f3b47c7bbc6b638fd4eae692.jpeg'
+  img.onload = () => {
+    elements.unshift({
+      draw: (pen) => {
+        pen.drawImage(img, 0, 0)
+      }
+    })
+  };
+
+
+  class SurroundObject{
+    constructor(){
+      this.startPoint = false;
+      this.endPoint = false;
+      this.canvas = document.getElementById('canvas');
+      this.build();
+    }
+    build() {
+      const getStartPoint = (e) => {
+        this.startPoint = {
+          x: e.offsetX,
+          y: e.offsetY
+        }
+        this.canvas.addEventListener('mousemove', getEndPoint);
+      };
+
+      const getEndPoint = (e) => {
+        this.endPoint = {
+          x: e.offsetX,
+          y: e.offsetY
+        }
+      };
+
+      const mouseUp = () => {
+
+        this.canvas.removeEventListener('mousedown', getStartPoint)
+        this.canvas.removeEventListener('mousemove', getEndPoint)
+        this.canvas.removeEventListener('mouseup', mouseUp)
+      };
+
+      this.canvas.addEventListener('mousedown', getStartPoint);
+
+      this.canvas.addEventListener('mouseup', mouseUp)
+    }
+    draw(pen) {
+      if(this.startPoint && this.endPoint){
+        pen.beginPath();
+        pen.lineWidth="6";
+        pen.strokeStyle=String(document.querySelector('input').value);
+        pen.rect(this.startPoint.x, this.startPoint.y, (this.endPoint.x - this.startPoint.x), (this.endPoint.y - this.startPoint.y))
+        pen.stroke();
+        pen.closePath();
+      }
+    }
+  }
+
+  class DrawOutLine{
+    constructor(){
+      this.outLinePoints = [];
+      this.canvas = document.getElementById('canvas');
+      this.build();
+    }
+    build(){
+      let point = {};
+      const finish = () => {
+        this.canvas.removeEventListener('click', clickLisener);
+        this.canvas.removeEventListener('mousemove', resetPoint)
+      };
+      const clickLisener = (e) => {
+        point.x = e.offsetX;
+        point.y = e.offsetY;
+        this.outLinePoints.push(point);
+        if(this.outLinePoints.length > 3){
+          let absX = Math.pow((point.x - this.outLinePoints[0].x), 2);
+          let absY = Math.pow((point.y - this.outLinePoints[0].y), 2);
+          if(Math.sqrt(absX + absY) < 10){
+            finish()
+          }else{
+            point = {}
+            this.outLinePoints.push(point)
+          }
+        }else{
+          point = {}
+          this.outLinePoints.push(point)
+        }
+
+      };
+      const resetPoint = (e) => {
+        point.x = e.offsetX;
+        point.y = e.offsetY;
+      };
+      this.canvas.addEventListener('click', clickLisener)
+      this.canvas.addEventListener('mousemove', resetPoint)
+    }
+    draw(pen){
+      pen.beginPath();
+      pen.lineWidth="1";
+      pen.strokeStyle="#FFFFFF";
+      if(this.outLinePoints.length > 0 ){
+        pen.moveTo(this.outLinePoints[0].x, this.outLinePoints[0].y);
+        for(let l = 0; l < this.outLinePoints.length; l++){
+          pen.arc(this.outLinePoints[l].x, this.outLinePoints[l].y, 1, 0, Math.PI*2)
+          if((l + 1 !== this.outLinePoints.length) && this.outLinePoints[l+1].x && this.outLinePoints[l+1].y){
+            pen.lineTo(this.outLinePoints[l+1].x, this.outLinePoints[l+1].y)
+          }
+        }
+      }
+      pen.stroke();
+      pen.closePath();
+    }
+  }
+
+  class Point{
+    constructor(canvas){
+      this.canvas = canvas;
+      this.point = {x: -1, y: -1}
+      this.build();
+    }
+    build(){
+      const addPoint = (e) => {
+        this.point.x = e.offsetX;
+        this.point.y = e.offsetY;
+        this.canvas.removeEventListener('click', addPoint)
+      };
+      this.canvas.addEventListener('click', addPoint)
+    }
+    draw(pen) {
+      pen.beginPath();
+      pen.lineWidth="2";
+      pen.strokeStyle = '#FFFFFF';
+      pen.arc(this.point.x, this.point.y, 3, 0, Math.PI*2);
+      pen.stroke();
+      pen.closePath();
+    }
+  }
+
+  class PointGroup{
+    constructor(){
+      this.points = [];
+      this.build();
+    }
+    build(){
+      let point = {};
+      const clickListener = (e) => {
+        point.x = e.offsetX/scalex;
+        point.y = e.offsetY/scaley;
+        this.points.push(point);
+        point = {};
+        this.points.push(point)
+      };
+
+      const mousemoveListener = (e) => {
+        point.x = e.offsetX/scalex;
+        point.y = e.offsetY/scaley;
+      };
+
+      const finish = () => {
+        this.points.pop();
+        canvas.removeEventListener('click', clickListener);
+        canvas.removeEventListener('mousemove', mousemoveListener);
+        canvas.removeEventListener('contextmenu', finish)
+      };
+      canvas.addEventListener('click', clickListener);
+      canvas.addEventListener('mousemove', mousemoveListener);
+      canvas.addEventListener('contextmenu', finish);
+    }
+    draw() {
+      pen.beginPath();
+      pen.lineWidth="2";
+      pen.strokeStyle="#FFFFFF";
+      if(this.points.length > 0 ){
+        pen.moveTo(this.points[0].x, this.points[0].y);
+        for(let l = 0; l < this.points.length; l++){
+          pen.arc(this.points[l].x, this.points[l].y, 1, 0, Math.PI*2)
+          if((l + 1 !== this.points.length) && this.points[l+1].x && this.points[l+1].y){
+            pen.lineTo(this.points[l+1].x, this.points[l+1].y)
+          }
+        }
+      }
+      pen.stroke();
+      pen.closePath();
+    }
+  }
+
+  // elements.push(new SurroundObject());
+  // elements.push(new DrawOutLine());
+  // elements.push(new Point(canvas))
+  elements.push(new PointGroup());
+
+  const main_loop = () => {
+    pen.clearRect(0, 0, 9999, 9999);
+    for (let l = 0; l < elements.length; l++) {
+      elements[l].draw(pen);
+    }
+    requestAnimationFrame(main_loop);
+  };
+  main_loop();
+  // 马上1.2w 还呗1w 省呗官方2.3w, 中原3w, 北京银行2.5w, 平安普惠3w，平安3w, 招商3w
+  // const total = [];
+  //
+  // total.push(getData('马上', 1.2));
+  // total.push(getData('还呗', 1));
+  // total.push(getData('省呗官方', 2.3));
+  // total.push(getData('中原消费', 3));
+  // total.push(getData('北京银行', 2.5));
+  // total.push(getData('平安普惠', 3));
+  // total.push(getData('平安', 3));
+  // total.push(getData('招商', 3));
 
   // let finalMoney = 0;
   //
   // total.forEach(m => {
   //   finalMoney += m.value
   // });
-  console.log(parseInt(Math.random()*100000000000))
 </script>
 </html>
+

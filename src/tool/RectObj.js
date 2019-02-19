@@ -4,11 +4,14 @@ const DRAG = 'drag';
 const TRANSFORM = 'transform';
 
 class RectObj{
-  constructor(bboxId){
+  constructor(bboxId,name, categoryId){
     this.type = '矩形工具';
+    this.typeCode = 'bbox';
     this.msg = '';
     this.show = true;
     this.bboxId = bboxId;
+    this.name = name;
+    this.categoryId = categoryId
     this.startPoint = false;
     this.endPoint = false;
     this.edit = false;
@@ -94,7 +97,6 @@ class RectObj{
       this.transNum = -1;
       this.mouseMoveAction = ''
     };
-    this.build();
   }
 
   getPoints() {// points 从左上角顺时针旋转到左下角
@@ -116,7 +118,7 @@ class RectObj{
   }
 
   editElement(del) {
-    if(this.edit || del){
+    if(this.edit || del === false){
       this.edit = false;
       this.canvas.removeEventListener('mousedown', this.editMouseDown);
       this.canvas.removeEventListener('mousemove', this.editMouseMove);
@@ -157,6 +159,7 @@ class RectObj{
 
     this.canvas.addEventListener('mousedown', getStartPoint);
     this.canvas.addEventListener('mouseup', mouseUp)
+    return this
   }
 
   fill(pen) {
@@ -192,8 +195,42 @@ class RectObj{
       }
     }
   }
+  getCoCoData(){
+    const points = this.getPoints();
+    let minX = points[0].x;
+    let minY = points[0].y;
+    let maxX = points[0].x;
+    let maxY = points[0].y;
+    for(let index=0; index < points.length; index++){
+      if(points[index].x < minX){
+        minX = points[index].x
+      }
+      if(points[index].y < points[index].y){
+        minY = points[index].y
+      }
+      if(points[index].x > maxX){
+        maxX = points[index].x
+      }
+      if(points[index].y > maxY){
+        maxY = points[index].y
+      }
+    }
+    const width = Math.abs(maxX - minX);
+    const height = Math.abs(maxY - minY);
+    return [minX, minY, width, height]
+  }
+  initByCocoData(annotation){
+    this.startPoint = {
+      x: annotation.bbox[0],
+      y: annotation.bbox[1]
+    };
+    this.endPoint = {
+      x: this.startPoint.x + annotation.bbox[2],
+      y: this.startPoint.y + annotation.bbox[3]
+    }
+  }
 }
 
-export function getRectObj(bboxId) {
-  return new RectObj(bboxId)
+export function getRectObj(bboxId, name, categoryId) {
+  return new RectObj(bboxId,name,categoryId)
 }

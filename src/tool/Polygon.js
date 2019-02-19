@@ -13,9 +13,11 @@ const getDragPointIndex = (e, points) => {
 };
 
 class Polygon{
-  constructor(bboxId){
+  constructor(bboxId, categoryId){
     this.bboxId = bboxId;
+    this.categoryId = categoryId;
     this.type = '轮廓工具';
+    this.typeCode = 'polygon'
     this.msg = '';
     this.show = true;
     this.points = [];
@@ -27,7 +29,6 @@ class Polygon{
     this.dragStartPoint = {
 
     };
-    this.build();
     this.editMouseDown = (e) => {
       this.editPointIndex = getDragPointIndex(e, this.points)
       if(this.showDragShadow && this.editPointIndex < 0){ // 没有点击到圆点，并且点击到了阴影
@@ -65,7 +66,6 @@ class Polygon{
   }
 
   startDrag(e){
-    console.log(this.points.length);
     const disX = e.offsetX - this.dragStartPoint.x;
     const disY = e.offsetY - this.dragStartPoint.y;
     for(let l = 0; l < this.points.length; l++){
@@ -77,7 +77,7 @@ class Polygon{
   }
 
   editElement (del) {
-    if(this.edit || del){
+    if(this.edit || del === false){
       this.edit = false
       this.canvas.removeEventListener('mousedown', this.editMouseDown)
       this.canvas.removeEventListener('mousemove', this.editMouseMove)
@@ -137,6 +137,7 @@ class Polygon{
     };
     this.canvas.addEventListener('click', clickLisener)
     this.canvas.addEventListener('mousemove', resetPoint)
+    return this
   }
 
   getDragShadow(e) {
@@ -237,8 +238,33 @@ class Polygon{
     pen.closePath();
 
   }
+
+  getCoCoData(){
+    const segmentation = [];
+    for(let l=0; l < this.points.length - 1; l++){
+      segmentation.push(this.points[l].x);
+      segmentation.push(this.points[l].y)
+    }
+    return segmentation
+  }
+
+  initByCocoData(annotation){
+    annotation.segmentation.forEach(segmentation => {
+      for(let l = 0; l< segmentation.length; l = l+2){
+        this.points.push({
+          x: segmentation[l],
+          y: segmentation[l+1]
+        })
+      }
+      this.points.push({
+        x: segmentation[0],
+        y: segmentation[1]
+      })
+    })
+
+  }
 }
 
-export function getPolygon(bboxId) {
-  return new Polygon(bboxId);
+export function getPolygon(bboxId, categoryId) {
+  return new Polygon(bboxId, categoryId);
 }

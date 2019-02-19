@@ -1,16 +1,19 @@
 import { Setting, HIGH_COLOR, COMMON_COLOR } from "./Setting";
 
 class Point{
-  constructor(bboxId){
+  constructor(bboxId, categoryId){
     this.bboxId = bboxId;
+    this.categoryId = categoryId;
     this.type = '关键点';
+    this.typeCode = 'point';
+
     this.msg = '';
     this.show = true;
     this.canvas = document.getElementById('canvas');
     this.edit = false;
     this.ondrag = false;
     this.finish = false;
-    this.point = {x: -1, y: -1};
+    this.point = {x: -1, y: -1,v: 0};
     this.editMouseMove = (e) => {
       if(this.ondrag){
         this.point.x = e.offsetX;
@@ -30,8 +33,6 @@ class Point{
     this.editMouseUp = () => {
       this.ondrag = false
     };
-    this.build();
-
   }
   build(){
     this.point.x = -1;
@@ -44,9 +45,10 @@ class Point{
       this.finish = true
     };
     this.canvas.addEventListener('click', addPoint)
+    return this
   }
   editElement (del) {
-    if(this.edit || del){
+    if(this.edit || del === false){
       this.finish = true;
       this.edit = false;
       this.canvas.removeEventListener('mousedown', this.editMouseDown)
@@ -75,6 +77,6 @@ class Point{
   }
 }
 
-export function getPoint(bboxId) {
-  return new Point(bboxId)
+export function getPoint(bboxId, categoryId) {
+  return new Point(bboxId, categoryId)
 }
